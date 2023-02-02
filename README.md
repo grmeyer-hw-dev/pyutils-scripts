@@ -31,7 +31,7 @@ python generate_dsqls.py -i ids_from_db.txt -t "UPDATE test_table SET\n\t\`statu
 Options:
 
 ``` bash
-python generate_dsqls.py -i ids2.txt -o custom_prefix -p "result/test1" -c 1000 -s 10 -t "UPDATE test_table SET\n\t`status` = 'NOT_AVAILABLE'\nWHERE id IN ({});\n\n"
+python generate_dsqls.py -i ids2.txt -o custom_prefix -p "result/test1" -c 1000 -s 10 -t "UPDATE test_table SET\n\t\`status\` = 'NOT_AVAILABLE'\nWHERE id IN ({});\n\n"
 ```
 
 #### The ids_from_db.txt file content:
