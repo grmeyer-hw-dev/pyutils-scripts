@@ -4,14 +4,15 @@ Some daily scripts to automate daily tasks
 
 ## Generate DSQL by chunk files
 
-###Script###
+### Script
 `create_chunked_dsqls_v3.py`
 
 
-###Description###
+### Description
+
 the Script will load input file where each line contains the id required to build the DSQLs.
 
-###Arguments###
+### Arguments
   - `-i <input file name>`
   - `-c <chunk size>`
   -  `-s <sql command by file>`
