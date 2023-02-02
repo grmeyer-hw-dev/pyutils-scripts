@@ -1,5 +1,5 @@
 # pyutils-scripts
-Some daily scripts to automate daily tasks
+Scripts to automate daily tasks
 
 
 ## Generate DSQL by chunk files
