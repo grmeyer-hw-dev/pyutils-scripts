@@ -52,5 +52,5 @@ python generate_dsqls.py -i resources/ids_from_db.txt -t "UPDATE test_table SET\
 
 
 #### Output:
+![Screenshot 2023-02-02 at 3 46 20 PM](https://user-images.githubusercontent.com/107439697/216477024-192749e5-bb08-4a64-9bdf-6d4bfa18040f.png)
 
-![Screenshot 2023-02-02 at 11 35 05 AM](https://user-images.githubusercontent.com/107439697/216432333-b103c1fe-6dfa-44d9-bbc3-46ab0ca3943b.png)
