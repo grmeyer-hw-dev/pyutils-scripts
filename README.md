@@ -5,7 +5,7 @@ Some daily scripts to automate daily tasks
 ## Generate DSQL by chunk files
 
 ### Script
-`create_chunked_dsqls_v3.py`
+`generate_dsqls.py`
 
 ### Description
 
@@ -24,14 +24,14 @@ the Script will load input file where each line contains the id required to buil
 Options: 
 
 ``` bash
-python create_chunked_dsqls_v3.py -i ids_from_db.txt -t "UPDATE test_table SET\n\t\`status\` = 'NOT_AVAILABLE'\nWHERE id IN ({});\n\n"
+python generate_dsqls.py -i ids_from_db.txt -t "UPDATE test_table SET\n\t\`status\` = 'NOT_AVAILABLE'\nWHERE id IN ({});\n\n"
 ```
 
 #### Sample with custom params
 Options: 
 
 ``` bash
-python create_chunked_dsqls_v3.py -i ids2.txt -o custom_prefix -p "result/test1" -c 1000 -s 10 -t "UPDATE test_table SET\n\t`status` = 'NOT_AVAILABLE'\nWHERE id IN ({});\n\n"
+python generate_dsqls.py -i ids2.txt -o custom_prefix -p "result/test1" -c 1000 -s 10 -t "UPDATE test_table SET\n\t`status` = 'NOT_AVAILABLE'\nWHERE id IN ({});\n\n"
 ```
 
 #### The ids_from_db.txt file content:
