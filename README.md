@@ -21,14 +21,14 @@ the Script will load input file where each line contains the id required to buil
   -  `-f <file id init>` - the init file index. by default is 1 but it's possible to start from 2 other number
 
 #### Sample with required arg
-Options: 
+Options:
 
 ``` bash
 python generate_dsqls.py -i ids_from_db.txt -t "UPDATE test_table SET\n\t\`status\` = 'NOT_AVAILABLE'\nWHERE id IN ({});\n\n"
 ```
 
 #### Sample with custom params
-Options: 
+Options:
 
 ``` bash
 python generate_dsqls.py -i ids2.txt -o custom_prefix -p "result/test1" -c 1000 -s 10 -t "UPDATE test_table SET\n\t`status` = 'NOT_AVAILABLE'\nWHERE id IN ({});\n\n"
@@ -45,8 +45,12 @@ python generate_dsqls.py -i ids2.txt -o custom_prefix -p "result/test1" -c 1000 
 550740
 ```
 
+##### Test with sample resources
+``` bash
+python generate_dsqls.py -i resources/ids_from_db.txt -t "UPDATE test_table SET\n\t\`status\` = 'NOT_AVAILABLE'\nWHERE id IN ({});\n\n" -c 2 -s 3
+```
+
+
 #### Output:
 
 ![Screenshot 2023-02-02 at 11 35 05 AM](https://user-images.githubusercontent.com/107439697/216432333-b103c1fe-6dfa-44d9-bbc3-46ab0ca3943b.png)
-
-
