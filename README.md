@@ -7,26 +7,34 @@ Some daily scripts to automate daily tasks
 ### Script
 `create_chunked_dsqls_v3.py`
 
-
 ### Description
 
 the Script will load input file where each line contains the id required to build the DSQLs.
 
 ### Arguments
-  - `-i <input file name>`
-  - `-c <chunk size>`
-  -  `-s <sql command by file>`
-  -  `-t <sql template.>`
-  -  `-f <file id init>`
-  -  `-o <output file name> `
+  - `-i <input file name>` - (REQUIRED) the input file that contains the ids to generate the SQL commands
+  -  `-t <sql template.>` - (REQUIRED) the SQL Command template. use `{}` to define where the ids will be replaced it.
+  - `-o <output prefix script>` - rename output script prefix. By default is `output_<file index>_of_<total files>.sql`
+  - `-p <output path>` - custom output path. by default is `output`
+  - `-c <chunk size>` - chunk size each SQL command will process. e.g. 1000 entries
+  -  `-s <sql command by file>` - Amount of SQL Commands by DSQL file. by default is 10 SQL Commands
+  -  `-f <file id init>` - the init file index. by default is 1 but it's possible to start from 2 other number
 
-Sample
+#### Sample with required arg
+Options: 
+
 ``` bash
-python create_chunked_dsqls_v3.py -o test -i ids2.txt -t "UPDATE test_table SET\n\t`status` = 'NOT_AVAILABLE'\nWHERE id IN ({});\n\n"
-
+python create_chunked_dsqls_v3.py -i ids_from_db.txt -t "UPDATE test_table SET\n\t\`status\` = 'NOT_AVAILABLE'\nWHERE id IN ({});\n\n"
 ```
 
-The ids2.txt file content:
+#### Sample with custom params
+Options: 
+
+``` bash
+python create_chunked_dsqls_v3.py -i ids2.txt -o custom_prefix -p "result/test1" -c 1000 -s 10 -t "UPDATE test_table SET\n\t`status` = 'NOT_AVAILABLE'\nWHERE id IN ({});\n\n"
+```
+
+#### The ids_from_db.txt file content:
 ```
 550734
 550735
@@ -36,3 +44,9 @@ The ids2.txt file content:
 550739
 550740
 ```
+
+#### Output:
+
+![Screenshot 2023-02-02 at 11 35 05 AM](https://user-images.githubusercontent.com/107439697/216432333-b103c1fe-6dfa-44d9-bbc3-46ab0ca3943b.png)
+
+
