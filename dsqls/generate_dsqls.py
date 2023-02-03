@@ -9,15 +9,17 @@ import sys
 import getopt
 import os
 import codecs
+import traceback
 
 
-# Represents the extrqcted object from file's line
+# Represents the extracted object from file's line
 # Todo: refactory to represent the object required to build SQL Statement
 class InputData:
     """ Represents the input data from file's line. Note Update this class to represent the file metadata"""
+
     def __init__(self, raw_data):
         # Represents the file row
-        self.id: String = str(raw_data.rstrip())
+        self.id: str = str(raw_data.rstrip())
 
     def __str__(self):
         return f'InputData( id: {self.id} )'
@@ -28,84 +30,106 @@ class InputData:
 
 class DataChunk:
     """ Represents the data chunk of set"""
+
     def __init__(self, items: [InputData], max_chunk_size):
         self.items: [InputData] = items
-        self.size: int= len(items)
-        self.max_chunk_size: int= max_chunk_size
+        self.size: int = len(items)
+        self.max_chunk_size: int = max_chunk_size
 
     def __str__(self):
-        return f'DataChunk( size: { self.size }, max_chunk_size: { self.max_chunk_size } )'
+        return f'DataChunk( size: {self.size}, max_chunk_size: {self.max_chunk_size} )'
 
     def __repr__(self):
-        return f'DataChunk( size: { self.size }, max_chunk_size: { self.max_chunk_size } )'
+        return f'DataChunk( size: {self.size}, max_chunk_size: {self.max_chunk_size} )'
+
 
 class SQLCommand:
     """ Represents the SQL command"""
+
     def __init__(self, template, chunk: DataChunk):
         self.chunk: DataChunk = chunk
         # TODO: Replace with the required SQL command
-        self.template: String = template
+        self.template: str = template
 
     """ Returns the number of rows will be affected"""
+
     def affected_items(self):
         return self.chunk.size
 
     """ Builds the SQL command. Note update this method to generate the required SQL output """
+
     def build_sql_statement(self):
         # TODO: Refactory this to build the expected SQL Result
         # e.id is property from InputData object
-        combined_ids: String = ','.join(e.id for e in self.chunk.items)
+        combined_ids: str = ','.join(e.id for e in self.chunk.items)
         return self.template.format(combined_ids)
 
     def __str__(self):
-        return f'SQLCommand( affected_items: { self.affected_items() })'
+        return f'SQLCommand( affected_items: {self.affected_items()})'
 
     def __repr__(self):
-        return f'SQLCommand( affected_items: { self.affected_items() })'
+        return f'SQLCommand( affected_items: {self.affected_items()})'
+
 
 # Represents DSQL file will be generated
 class DSQLFile(object):
     """ Represents DSQL File """
+
     def __init__(self, id, sql_commands, max_chunk_size):
         self.id: int = id
         self.sql_commands: [SQLCommand] = sql_commands
         self.max_chunk_size: int = max_chunk_size
 
     """ Returns the number of entries will be affected """
+
     def total_affected_items(self):
         return sum(e.affected_items() for e in self.sql_commands)
 
     """ Returns the number of SQL commands available in the file """
+
     def total_sql_commands(self):
         return len(self.sql_commands)
 
     """ Builds the output file name """
+
     def build_output_file_name(self, output_path, output_file_name, total_files):
         return "{}/{}_{}_of_{}.sql".format(output_path, output_file_name, self.id, total_files);
 
     """ Builds the file header """
+
     def build_header(self, number_of_files):
-        return "-- file: {} of {}, affected_rows: {}, max_chunk_size: {}, total_sql_commands: {}\n\n".format(self.id, number_of_files, self.total_affected_items(), self.max_chunk_size, self.total_sql_commands())
+        return "-- file: {} of {}, " \
+               "affected_rows: {}, " \
+               "max_chunk_size: {}, " \
+               "total_sql_commands: {}\n\n".format(self.id,
+                                                   number_of_files,
+                                                   self.total_affected_items(),
+                                                   self.max_chunk_size,
+                                                   self.total_sql_commands())
 
     """ Builds the file content """
+
     def build_content(self):
         return '\n'.join(e.build_sql_statement() for e in self.sql_commands)
 
     def __repr__(self):
         # return f'DSQLFile( sql_commands: { len(self.sql_commands) })'
-        return f'DSQLFile( id: {self.id }, total_affected_items: { self.total_affected_items() }, total_sql_commands: { self.total_sql_commands()} , max_chunk_size: { self.max_chunk_size })'
+        return f'DSQLFile( id: {self.id}, ' \
+               f'total_affected_items: {self.total_affected_items()}, ' \
+               f'total_sql_commands: {self.total_sql_commands()} , ' \
+               f'max_chunk_size: {self.max_chunk_size})'
+
 
 class BuildDSQLFile(object):
-
-
     """ Loads entries (InputData) from the input file
         Returns list of InputData.
     """
+
     def load_input_entries(self, input_file_name):
         input_file = open(input_file_name, 'r')
         lines = input_file.readlines()
+        entries = []
 
-        entries = [];
         for line in lines:
             entries.append(InputData(line))
 
@@ -117,6 +141,7 @@ class BuildDSQLFile(object):
     """ Splits the entries in chunks
         Returns list of DataChunks
     """
+
     def split_entries(self, entries, max_chunk_size):
         result = []
         chunk = []
@@ -137,8 +162,10 @@ class BuildDSQLFile(object):
     """ Builds the SQL Statements
         Returns list of SQLCommand
     """
+
     def build_sql_commands(self, sql_template, chunks):
         sql_commands = []
+
         for data in chunks:
             sql_commands.append(SQLCommand(sql_template, data))
 
@@ -148,10 +175,12 @@ class BuildDSQLFile(object):
         This method will populate the max SQL Commands support per file
         Returns list of DSQLFile
     """
+
     def build_dsql_files(self, init_file_id, sql_commands, max_sql_commands_per_file, max_chunk_size):
         dsql_files = []
         file_id = init_file_id
-        group_sql_commands = [];
+        group_sql_commands = []
+
         for sql_command in sql_commands:
             group_sql_commands.append(sql_command)
 
@@ -165,10 +194,10 @@ class BuildDSQLFile(object):
 
         return dsql_files;
 
-
     """ Creates the DSQL Files
         Returns list of SQLCommand
     """
+
     def create_dsql_files(self, dsql_files, output_path, output_script_name):
         # Create DSQL files
         total_files = len(dsql_files)
@@ -183,11 +212,12 @@ class BuildDSQLFile(object):
     def create_output_folder(self, output_path):
         isExist = os.path.exists(output_path)
         if not isExist:
-           # Create a new directory because it does not exist
-           os.makedirs(output_path)
-           print("The new directory is created!")
+            # Create a new directory because it does not exist
+            os.makedirs(output_path)
+            print("The new directory is created!")
 
-    def process(self, input_file_name, output_path, output_script_name, sql_template, init_file_id, chunk_size, sql_command_per_file):
+    def process(self, input_file_name, output_path, output_script_name, sql_template, init_file_id, chunk_size,
+                sql_command_per_file):
         # load input entries (List of InputData)
         input_entries = self.load_input_entries(input_file_name)
 
@@ -197,9 +227,8 @@ class BuildDSQLFile(object):
         # build SQl commands
         sql_commands = self.build_sql_commands(sql_template, chunked_entries)
 
-        # build DSQL files by groupping sql commands per file
+        # build DSQL files by grouping sql commands per file
         dsql_files = self.build_dsql_files(init_file_id, sql_commands, sql_command_per_file, chunk_size)
-
 
         self.create_output_folder(output_path)
 
@@ -208,23 +237,34 @@ class BuildDSQLFile(object):
 
 
 def process(argv):
-    arg_help = "{0} -i <input file name> -p <output path> -o <output prefix script> -c <chunk size> -s <sql command by file>  -t <sql template.> -f <file id init>  ".format(argv[0])
+    arg_help = "{0} -i <input file name>" \
+               " -p <output path>" \
+               " -o <output prefix script>" \
+               " -c <chunk size>" \
+               " -s <sql command by file>" \
+               " -t <sql template.>" \
+               " -f <file id init>".format(argv[0])
+
     # Number of ids by sql statement
-    arg_chunk_size = 1000;
+    arg_chunk_size = 1000
     # Max number of sql instruction per a DSQL file.
-    arg_sql_command_per_file = 10;
+    arg_sql_command_per_file = 10
     # init file id
     arg_init_file_id = 1
+    # Target input file that contains the ids
     arg_input = 'resources/ids_from_db.txt'
+    # Output path directory
     arg_output_path = 'output'
+    # Output prefix filename
     arg_output_script_name = 'script'
-    # The brakets will be replace by the ids loaded from the file {}
+    # The brackets will be replaced by the ids loaded from the file {}
     arg_sql_template = "UPDATE table_name SET\n\t`status` = 'NOT_AVAILABLE'\nWHERE id IN ({});\n\n"
 
     print(argv)
     try:
         opts, args = getopt.getopt(argv[1:], "h:i:c:s:f:o:t:p:", ["help", "input=",
-        "chunk=", "sql=","outputname=", "fileid=", "outputpath=, template="])
+                                                                  "chunk=", "sql=", "output_name=", "fileid=",
+                                                                  "output_path=, template="])
     except Exception:
         print(arg_help)
         traceback.print_exc()
@@ -243,9 +283,9 @@ def process(argv):
         elif opt in ("-t", "--template"):
             print(arg)
             arg_sql_template = codecs.decode(arg, "unicode_escape")
-        elif opt in ("-p", "--outputpath"):
+        elif opt in ("-p", "--path"):
             arg_output_path = arg
-        elif opt in ("-o", "--outputname"):
+        elif opt in ("-o", "--output_name"):
             arg_output_script_name = arg
         elif opt in ("-s", "--sql"):
             arg_sql_command_per_file = int(arg)
@@ -258,7 +298,9 @@ def process(argv):
     print('output path (-p):', arg_output_path)
     print('output prefix script name (-o):', arg_output_script_name)
 
-    BuildDSQLFile().process(arg_input, arg_output_path, arg_output_script_name, arg_sql_template, arg_init_file_id, arg_chunk_size, arg_sql_command_per_file)
+    BuildDSQLFile().process(arg_input, arg_output_path, arg_output_script_name, arg_sql_template, arg_init_file_id,
+                            arg_chunk_size, arg_sql_command_per_file)
+
 
 if __name__ == "__main__":
     process(sys.argv)
