@@ -3,7 +3,7 @@
 # Script read file formatted with 1 id by line and generate DSQL
 #
 # Sample how to run this code
-# python generate_dsqls.py -o test -i -i resources/ids_from_db.txt -c 1000 -s 10 -t "UPDATE tax_forms SET\n\t\`status\` = 'NOT_AVAILABLE'\nWHERE id IN ({});\n\n"
+# python generate_dsqls.py -i resources/ids_from_db.txt -t "UPDATE tax_forms SET\n\t\`status\` = 'NOT_AVAILABLE'\nWHERE id IN ({});\n\n"
 #
 import sys
 import getopt
