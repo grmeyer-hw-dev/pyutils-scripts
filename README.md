@@ -3,6 +3,7 @@ Scripts to automate daily tasks
 
 
 ## Generate DSQL by chunk files
+https://user-images.githubusercontent.com/107439697/216684789-4fd5e6a5-37f2-4a35-b188-a77c9f5eac3a.mp4
 
 ### Script
 `generate_dsqls.py`
