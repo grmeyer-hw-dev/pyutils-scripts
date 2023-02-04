@@ -10,6 +10,9 @@ import getopt
 import os
 import codecs
 import traceback
+import math
+import time
+from itertools import (takewhile, repeat)
 
 
 # Represents the extracted object from file's line
@@ -93,7 +96,7 @@ class DSQLFile(object):
     """ Builds the output file name """
 
     def build_output_file_name(self, output_path, output_file_name, total_files):
-        return "{}/{}_{}_of_{}.sql".format(output_path, output_file_name, self.id, total_files);
+        return "{}/{}_{}_of_{}.sql".format(output_path, output_file_name, self.id, total_files)
 
     """ Builds the file header """
 
@@ -192,7 +195,7 @@ class BuildDSQLFile(object):
         if len(group_sql_commands) > 0:
             dsql_files.append(DSQLFile(file_id, group_sql_commands, max_chunk_size))
 
-        return dsql_files;
+        return dsql_files
 
     """ Creates the DSQL Files
         Returns list of SQLCommand
@@ -203,11 +206,14 @@ class BuildDSQLFile(object):
         total_files = len(dsql_files)
         print(output_path)
         for dsql_file in dsql_files:
-            dsql_file_name = dsql_file.build_output_file_name(output_path, output_script_name, total_files)
-            output_file = open(dsql_file_name, "a")
-            output_file.write(dsql_file.build_header(total_files))
-            output_file.write(dsql_file.build_content())
-            output_file.close()
+            self.create_dsql_file(dsql_file, output_path, output_script_name, total_files)
+
+    def create_dsql_file(self, dsql_file, output_path, output_script_name, total_files):
+        dsql_file_name = dsql_file.build_output_file_name(output_path, output_script_name, total_files)
+        output_file = open(dsql_file_name, "a")
+        output_file.write(dsql_file.build_header(total_files))
+        output_file.write(dsql_file.build_content())
+        output_file.close()
 
     def create_output_folder(self, output_path):
         isExist = os.path.exists(output_path)
@@ -216,8 +222,58 @@ class BuildDSQLFile(object):
             os.makedirs(output_path)
             print("The new directory is created!")
 
+    """ Process the input file by stream """
+
+    def count_file_lines(self, filename):
+        with open(filename, 'rb') as infile:
+            buffer = takewhile(lambda x: x, (infile.raw.read(1024 * 1024) for _ in repeat(None)))
+            return sum(buf.count(b'\n') for buf in buffer)
+
+    def estimate_number_of_files(self, number_of_entries, chunk_size, sql_command_per_file):
+        return int(math.ceil((number_of_entries / chunk_size) / sql_command_per_file))
+
+    """ Process the input file by stream """
+
+    def process_stream(self, input_file_name, output_path, output_script_name, sql_template, init_file_id, chunk_size,
+                       sql_command_per_file):
+
+        self.create_output_folder(output_path)
+        number_of_entries = self.count_file_lines(input_file_name)
+        estimate_number_of_files = self.estimate_number_of_files(number_of_entries, chunk_size, sql_command_per_file)
+
+        with open(input_file_name) as infile:
+            entries = []
+            chunked_entries = []
+            file_id = init_file_id
+
+            for line in infile:
+                entries.append(InputData(line))
+
+                if len(entries) == chunk_size:
+                    chunked_entries.append(DataChunk(entries, chunk_size))
+                    entries = []
+
+                if len(chunked_entries) == sql_command_per_file:
+                    sql_commands = self.build_sql_commands(sql_template, chunked_entries)
+                    dsql_file = DSQLFile(file_id, sql_commands, chunk_size)
+                    self.create_dsql_file(dsql_file, output_path, output_script_name, estimate_number_of_files)
+                    chunked_entries = []
+                    file_id += 1
+
+            if len(entries) > 0:
+                chunked_entries.append(DataChunk(entries, chunk_size))
+                sql_commands = self.build_sql_commands(sql_template, chunked_entries)
+                dsql_file = DSQLFile(file_id, sql_commands, chunk_size)
+                self.create_dsql_file(dsql_file, output_path, output_script_name, estimate_number_of_files)
+
+            print("Number of files: %s ", file_id)
+            print("Number of affected entries: %s ", number_of_entries)
+
+    """ Process the input file, by loading all file in memory """
+
     def process(self, input_file_name, output_path, output_script_name, sql_template, init_file_id, chunk_size,
                 sql_command_per_file):
+
         # load input entries (List of InputData)
         input_entries = self.load_input_entries(input_file_name)
 
@@ -298,8 +354,10 @@ def process(argv):
     print('output path (-p):', arg_output_path)
     print('output prefix script name (-o):', arg_output_script_name)
 
-    BuildDSQLFile().process(arg_input, arg_output_path, arg_output_script_name, arg_sql_template, arg_init_file_id,
-                            arg_chunk_size, arg_sql_command_per_file)
+    start_time = time.time()
+    BuildDSQLFile().process_stream(arg_input, arg_output_path, arg_output_script_name, arg_sql_template,
+                                   arg_init_file_id, arg_chunk_size, arg_sql_command_per_file)
+    print("took %s seconds ---" % (time.time() - start_time))
 
 
 if __name__ == "__main__":
