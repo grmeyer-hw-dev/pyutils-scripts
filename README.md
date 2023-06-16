@@ -6,7 +6,8 @@ Scripts to automate daily tasks
 https://user-images.githubusercontent.com/107439697/216684789-4fd5e6a5-37f2-4a35-b188-a77c9f5eac3a.mp4
 
 ### Script
-`generate_dsqls.py`
+`generate_dsqls.py` - Split dsql files
+`rename_java_test_method_name.py` - rename java unit test method names. e.g. missing prefix test
 
 ### Description
 
@@ -54,4 +55,3 @@ python generate_dsqls.py -i resources/ids_from_db.txt -t "UPDATE test_table SET\
 
 #### Output:
 ![Screenshot 2023-02-02 at 3 46 20 PM](https://user-images.githubusercontent.com/107439697/216477024-192749e5-bb08-4a64-9bdf-6d4bfa18040f.png)
-
