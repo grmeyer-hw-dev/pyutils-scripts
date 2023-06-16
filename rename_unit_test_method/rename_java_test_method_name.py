@@ -6,13 +6,13 @@ class Stats:
     method_name_updated = 0
 
 def rename_test_method_recursive(directory):
-    target_file_name_suffix = "test.java"
     stats = Stats()
     # List all files from the target directory
     for root, dirs, files in os.walk(directory):
         for file_name in files:
             # evaluated files that ends with Test.java
-            if file_name.lower().endswith(target_file_name_suffix):
+            file_name_lowercase = file_name.lower()
+            if file_name_lowercase.endswith("test.java") or file_name_lowercase.endswith("testcase.java"):
                 # get the file path
                 file_path = os.path.join(root, file_name)
 
@@ -32,7 +32,11 @@ def evaluate_method_test_name(file_path, stats):
         content = file.read()
 
     # Find methos annotated with @Test
-    pattern = re.compile("(@Test\n.*void\s+)(\w+\()")
+    # (@Test\n.*void|@Test\n.*@Override\n.*void|@ParameterizedTest\n.*\n\s+void)\s(?!(test|should))(\w+)
+    # (@Test\n.*void|@ParameterizedTest\n.*void|@ParameterizedTest\n.*\n\s+void)\s(?!(test|should))(\w+)
+    # @Test\n.*void|@ParameterizedTest\n.*void|@ParameterizedTest\n.*\n\s+void|@ParameterizedTest\n.*\n\s+public\s+void
+    # "(@Test\n.*void\s+)(\w+\()"
+    pattern = re.compile("(@Test\n.*void|@ParameterizedTest\n.*void|@ParameterizedTest\n.*\n\s+void|@ParameterizedTest\n.*\n\s+public\s+void)\s+(\w+\()")
 
     new_content = content
     should_display_file_name = True
