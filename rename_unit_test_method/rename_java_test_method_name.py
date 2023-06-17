@@ -7,7 +7,8 @@ class Stats:
     method_name_updated = 0
 
 
-def rename_test_method_recursive(directory):
+def rename_test_method_recursive(directory: str, skip_apply_changes: bool = False):
+    # Set True on skip_apply_changes to skip apply changes to the file, it'll only display the changes
     stats = Stats()
     # List all files from the target directory
     for root, dirs, files in os.walk(directory):
@@ -19,12 +20,12 @@ def rename_test_method_recursive(directory):
                 file_path = os.path.join(root, file_name)
 
                 # evaluate file
-                evaluate_method_test_name(file_path, stats)
+                evaluate_method_test_name(file_path, stats, skip_apply_changes)
 
     print('Summary, file affected: {}, method renamed: {}'.format(stats.file_updated, stats.method_name_updated))
 
 
-def evaluate_method_test_name(file_path, stats):
+def evaluate_method_test_name(file_path, stats, skip_apply_changes=False):
     # Check if the file exists
     if not os.path.isfile(file_path):
         print(f"Error: File '{file_path}' does not exist.")
@@ -67,12 +68,13 @@ def evaluate_method_test_name(file_path, stats):
 
             print('original_method_name: {}, new_method_name: {}'.format(method_name, new_method_name))
             # replace method to the new one from file's content
-    #         new_content = new_content.replace('void {}'.format(method_name), 'void {}'.format(new_method_name))
-    #
-    # if (is_file_affected):
-    #     stats.file_updated = stats.file_updated + 1
-    #     with open(file_path, 'w') as file:
-    #         file.write(new_content)
+            if not skip_apply_changes:
+                new_content = new_content.replace('void {}'.format(method_name), 'void {}'.format(new_method_name))
+
+    if not skip_apply_changes and is_file_affected:
+        stats.file_updated = stats.file_updated + 1
+        with open(file_path, 'w') as file:
+            file.write(new_content)
 
 
 def capitalize(value):
@@ -119,7 +121,8 @@ def replace_underline(original_name):
     return new_name
 
 
-# Replace with target directory path
-directory = 'target_directory_path'
+# only print the changes
+# rename_test_method_recursive(directory='target_directory_path', skip_apply_changes=True)
 
-rename_test_method_recursive(directory)
+# Apply the change to the files
+rename_test_method_recursive(directory='target_directory_path')
