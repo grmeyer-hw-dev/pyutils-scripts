@@ -1,9 +1,11 @@
 import os
 import re
 
+
 class Stats:
     file_updated = 0
     method_name_updated = 0
+
 
 def rename_test_method_recursive(directory):
     stats = Stats()
@@ -21,6 +23,7 @@ def rename_test_method_recursive(directory):
 
     print('Summary, file affected: {}, method renamed: {}'.format(stats.file_updated, stats.method_name_updated))
 
+
 def evaluate_method_test_name(file_path, stats):
     # Check if the file exists
     if not os.path.isfile(file_path):
@@ -31,12 +34,13 @@ def evaluate_method_test_name(file_path, stats):
     with open(file_path, 'r') as file:
         content = file.read()
 
-    # Find methos annotated with @Test
+    # Find method annotated with @Test
     # (@Test\n.*void|@Test\n.*@Override\n.*void|@ParameterizedTest\n.*\n\s+void)\s(?!(test|should))(\w+)
     # (@Test\n.*void|@ParameterizedTest\n.*void|@ParameterizedTest\n.*\n\s+void)\s(?!(test|should))(\w+)
     # @Test\n.*void|@ParameterizedTest\n.*void|@ParameterizedTest\n.*\n\s+void|@ParameterizedTest\n.*\n\s+public\s+void
     # "(@Test\n.*void\s+)(\w+\()"
-    pattern = re.compile("(@Test\n.*void|@ParameterizedTest\n.*void|@ParameterizedTest\n.*\n\s+void|@ParameterizedTest\n.*\n\s+public\s+void)\s+(\w+\()")
+    pattern = re.compile(
+        "(@Test\n.*void|@ParameterizedTest\n.*void|@ParameterizedTest\n.*\n\s+void|@ParameterizedTest\n.*\n\s+public\s+void)\s+(\w+\()")
 
     new_content = content
     should_display_file_name = True
@@ -48,9 +52,11 @@ def evaluate_method_test_name(file_path, stats):
         new_method_name = method_name
         if not method_name.lower().startswith("test"):
             if not method_name.lower().startswith("should"):
-                new_method_name = add_prefix_test(new_method_name)
+                new_method_name = append_prefix(new_method_name, "test")
+        else:
+            new_method_name = reformat(method_name, "test")
 
-        if  method_name.find("_"):
+        if method_name.find("_"):
             new_method_name = replace_underline(new_method_name)
 
         if new_method_name != method_name:
@@ -61,15 +67,16 @@ def evaluate_method_test_name(file_path, stats):
 
             print('original_method_name: {}, new_method_name: {}'.format(method_name, new_method_name))
             # replace method to the new one from file's content
-            new_content = new_content.replace('void {}'.format(method_name), 'void {}'.format(new_method_name))
+    #         new_content = new_content.replace('void {}'.format(method_name), 'void {}'.format(new_method_name))
+    #
+    # if (is_file_affected):
+    #     stats.file_updated = stats.file_updated + 1
+    #     with open(file_path, 'w') as file:
+    #         file.write(new_content)
 
-    if (is_file_affected):
-        stats.file_updated = stats.file_updated + 1
-        with open(file_path, 'w') as file:
-            file.write(new_content)
 
 def capitalize(value):
-    # capitalize only the fisrt letter
+    # capitalize only the first letter
     if value == "":
         return value
 
@@ -79,20 +86,26 @@ def capitalize(value):
     return value[0].upper() + value[1:]
 
 
-def add_prefix_test(name):
+def reformat(name, prefix_name):
+    value = name.replace("test", "")
+    return append_prefix(value, prefix_name)
+
+
+def append_prefix(name, prefix_name):
     # append prefix test to the method name
-    captalize = name[0].upper() + name[1:]
-    return 'test{}'.format(captalize)
+    capitalized_name = capitalize(name)
+    return '{}{}'.format(prefix_name, capitalized_name)
+
 
 def replace_underline(original_name):
     # Splits value by _ and replace by prefix With
     values = original_name.split("_")
-
+    new_name = ""
     is_fist_part = True
     for value in values:
         if value == "":
             continue
-        if not is_fist_part :
+        if not is_fist_part:
             captalized_value = capitalize(value)
             join_value = "With"
             if value.lower().startswith("with"):
@@ -105,7 +118,8 @@ def replace_underline(original_name):
 
     return new_name
 
-# Usage example
-directory = '../target_folder'
+
+# Replace with target directory path
+directory = 'target_directory_path'
 
 rename_test_method_recursive(directory)
