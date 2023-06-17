@@ -5,24 +5,32 @@ import re
 class Stats:
     file_updated = 0
     method_name_updated = 0
+    file_ignored = 0
 
 
-def rename_test_method_recursive(directory: str, skip_apply_changes: bool = False):
+def rename_test_method_recursive(directory: str, ignored_files: set = {}, skip_apply_changes: bool = False):
     # Set True on skip_apply_changes to skip apply changes to the file, it'll only display the changes
     stats = Stats()
+    lowercase_ignored_files = list(map(lambda x: x.lower(), ignored_files))
     # List all files from the target directory
     for root, dirs, files in os.walk(directory):
         for file_name in files:
             # evaluated files that ends with Test.java
             file_name_lowercase = file_name.lower()
-            if file_name_lowercase.endswith("test.java") or file_name_lowercase.endswith("testcase.java"):
+            if file_name_lowercase.endswith(("test.java", "testcase.java")):
+                if file_name_lowercase in lowercase_ignored_files:
+                    # skip ignored file
+                    # print('skip file: {}'.format(file_name))
+                    stats.file_ignored = stats.file_ignored + 1
+                    continue
                 # get the file path
                 file_path = os.path.join(root, file_name)
 
                 # evaluate file
                 evaluate_method_test_name(file_path, stats, skip_apply_changes)
 
-    print('Summary, file affected: {}, method renamed: {}'.format(stats.file_updated, stats.method_name_updated))
+    print('Summary, file affected: {}, method renamed: {}, file ignored: {}'
+          .format(stats.file_updated, stats.method_name_updated, stats.file_ignored))
 
 
 def evaluate_method_test_name(file_path, stats, skip_apply_changes=False):
@@ -64,15 +72,15 @@ def evaluate_method_test_name(file_path, stats, skip_apply_changes=False):
             stats.method_name_updated = stats.method_name_updated + 1
             if not is_file_affected:
                 is_file_affected = True
+                stats.file_updated = stats.file_updated + 1
                 print('file_name: {}'.format(file_path))
 
-            print('original_method_name: {}, new_method_name: {}'.format(method_name, new_method_name))
+            print('  original_method_name: {}, new_method_name: {}'.format(method_name, new_method_name))
             # replace method to the new one from file's content
             if not skip_apply_changes:
                 new_content = new_content.replace('void {}'.format(method_name), 'void {}'.format(new_method_name))
 
     if not skip_apply_changes and is_file_affected:
-        stats.file_updated = stats.file_updated + 1
         with open(file_path, 'w') as file:
             file.write(new_content)
 
@@ -89,7 +97,7 @@ def capitalize(value):
 
 
 def reformat(name, prefix_name):
-    value = name.replace("test", "")
+    value = name.lstrip(prefix_name)
     return append_prefix(value, prefix_name)
 
 
@@ -124,5 +132,10 @@ def replace_underline(original_name):
 # only print the changes
 # rename_test_method_recursive(directory='target_directory_path', skip_apply_changes=True)
 
+ignored_files = [
+]
 # Apply the change to the files
-rename_test_method_recursive(directory='target_directory_path')
+rename_test_method_recursive(directory='target_directory_path', ignored_files=ignored_files, skip_apply_changes=True)
+
+# only print the changes
+# rename_test_method_recursive(directory='target_directory_path', skip_apply_changes=True)
