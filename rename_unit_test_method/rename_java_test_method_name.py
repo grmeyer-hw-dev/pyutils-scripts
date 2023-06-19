@@ -43,13 +43,14 @@ def evaluate_method_test_name(file_path, stats, skip_apply_changes=False):
     with open(file_path, 'r') as file:
         content = file.read()
 
-    # Find method annotated with @Test
-    # (@Test\n.*void|@Test\n.*@Override\n.*void|@ParameterizedTest\n.*\n\s+void)\s(?!(test|should))(\w+)
-    # (@Test\n.*void|@ParameterizedTest\n.*void|@ParameterizedTest\n.*\n\s+void)\s(?!(test|should))(\w+)
-    # @Test\n.*void|@ParameterizedTest\n.*void|@ParameterizedTest\n.*\n\s+void|@ParameterizedTest\n.*\n\s+public\s+void
-    # "(@Test\n.*void\s+)(\w+\()"
+    # Find method name that is annotated with @Test or @ParameterizedTest
     pattern = re.compile(
-        "(@Test\n.*void|@ParameterizedTest\n.*void|@ParameterizedTest\n.*\n\s+void|@ParameterizedTest\n.*\n\s+public\s+void)\s+(\w+\()")
+        "(@Test\n.*void" \
+        "|@Test\n\s+@Override\n.*void" \
+        "|@ParameterizedTest\n.*void" \
+        "|@ParameterizedTest\n.*\n\s+void" \
+        "|@ParameterizedTest\n.*\n\s+public\s+void" \
+        ")\s+(\w+\()")
 
     new_content = content
     should_display_file_name = True
@@ -96,31 +97,28 @@ def capitalize(value):
     return value[0].upper() + value[1:]
 
 
-def reformat(name, prefix_name):
-    value = name.lstrip(prefix_name)
-    return append_prefix(value, prefix_name)
+def reformat(name, prefix):
+    value = name[len(prefix):]
+    return append_prefix(value, prefix)
 
 
-def append_prefix(name, prefix_name):
+def append_prefix(name, prefix):
     # append prefix test to the method name
     capitalized_name = capitalize(name)
-    return '{}{}'.format(prefix_name, capitalized_name)
+    return '{}{}'.format(prefix, capitalized_name)
 
 
 def replace_underline(original_name):
     # Splits value by _ and replace by prefix With
     values = original_name.split("_")
     new_name = ""
+    join_value = ""
     is_fist_part = True
     for value in values:
         if value == "":
             continue
         if not is_fist_part:
             captalized_value = capitalize(value)
-            join_value = "With"
-            if value.lower().startswith("with"):
-                join_value = ""
-
             new_name = '{}{}{}'.format(new_name, join_value, captalized_value, )
         else:
             is_fist_part = False
