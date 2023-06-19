@@ -31,12 +31,18 @@ def rename_test_method_recursive(directory: str, ignored_files: set = {}, skip_a
                 # evaluate file
                 evaluate_method_test_name(file_path, stats, skip_apply_changes)
 
-    if skip_apply_changes :
-        print('\nSummary:\n\ttotal file(s) will be affected: {},\n\ttotal method(s) will be renamed: {},\n\ttotal file(s) ignored: {}'
-          .format(stats.file_updated, stats.method_name_updated, stats.file_ignored))
+    if skip_apply_changes:
+        print('\nSummary:'
+              '\n\ttotal file(s) will be affected: {},'
+              '\n\ttotal method(s) will be renamed: {},'
+              '\n\ttotal file(s) ignored: {}'
+              .format(stats.file_updated, stats.method_name_updated, stats.file_ignored))
     else:
-        print('\nSummary,\n\ttotal file(s) affected: {},\n\ttotal method(s) renamed: {},\n\ttotal file(s) ignored: {}'
-          .format(stats.file_updated, stats.method_name_updated, stats.file_ignored))
+        print('\nSummary,'
+              '\n\ttotal file(s) affected: {},'
+              '\n\ttotal method(s) renamed: {},'
+              '\n\ttotal file(s) ignored: {}'
+              .format(stats.file_updated, stats.method_name_updated, stats.file_ignored))
 
 
 def evaluate_method_test_name(file_path, stats, skip_apply_changes=False):
@@ -50,25 +56,24 @@ def evaluate_method_test_name(file_path, stats, skip_apply_changes=False):
         content = file.read()
 
     # Find method name that is annotated with @Test or @ParameterizedTest
-    # @ParameterizedTest\n\s+\@ValueSource\(strings = \{(\n.*){2,4}\s+\}\)\n\s+void
-    #
-    pattern = re.compile(
-        "(@Test\n.*void"\
-        "|@Test\n\s+@Override\n.*void"\
-        "|@ParameterizedTest\n.*void"\
-        "|@ParameterizedTest\n.*\n\s+void"\
-        "|@ParameterizedTest\n.*\n\s+public\s+void"\
-        "|@ParameterizedTest\n\s+\@ValueSource\(strings = \{(\n.*){2,4}\s+\}\)\n\s+void"\
-        "|@ParameterizedTest\n\s+\@CsvSource\((\n\s+value|value|)[\w\s=\{\",\.]+\}\)\n\s+void"\
-        ")\s+(?P<method_name>\w+\()")
+    target_method_prefix = "@Test\n.*void" \
+                           "|@Test\n\s+@Override\n.*void" \
+                           "|@ParameterizedTest\n.*void" \
+                           "|@ParameterizedTest\n.*\n\s+void" \
+                           "|@ParameterizedTest\n.*\n\s+public\s+void" \
+                           "|@ParameterizedTest\n\s+\@ValueSource\(strings = \{(\n.*){2,4}\s+\}\)\n\s+void" \
+                           "|@ParameterizedTest\n\s+\@CsvSource\((\n\s+value|value|)[\w\s=\{\",\.]+\}\)\n\s+void"
+    target_method_name = "?P<method_name>\w+\("
+    regular_expression = "({})\s+({})".format(target_method_prefix, target_method_name)
+
+    pattern = re.compile(regular_expression)
 
     new_content = content
-    should_display_file_name = True
     is_file_affected = False
     for match in re.finditer(pattern, content):
 
         method_name = match.group("method_name")
-        if method_name == "" or method_name == None:
+        if method_name == "" or method_name is None:
             print('!!!! review regex, file_name: {}'.format(file_path))
             continue
 
@@ -131,8 +136,8 @@ def replace_underline(original_name):
         if value == "":
             continue
         if not is_fist_part:
-            captalized_value = capitalize(value)
-            new_name = '{}{}{}'.format(new_name, join_value, captalized_value, )
+            formatted_name = capitalize(value)
+            new_name = '{}{}{}'.format(new_name, join_value, formatted_name)
         else:
             is_fist_part = False
             new_name = value
