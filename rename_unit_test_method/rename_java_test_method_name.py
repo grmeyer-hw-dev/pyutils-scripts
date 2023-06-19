@@ -1,4 +1,4 @@
-# Search and replace test files ends with sufix "test.java", "testcase.java"
+# Search and replace test files ends with suffix "test.java", "testcase.java"
 # names methods annotated with @Test and @ParameterizedTest
 import os
 import re
@@ -10,8 +10,10 @@ class Stats:
     file_ignored = 0
 
 
-def rename_test_method_recursive(directory: str, ignored_files: set = {}, skip_apply_changes: bool = False):
+def rename_test_method_recursive(directory: str, ignored_files=None, skip_apply_changes: bool = False):
     # Set True on skip_apply_changes to skip apply changes to the file, it'll only display the changes
+    if ignored_files is None:
+        ignored_files = {}
     stats = Stats()
     lowercase_ignored_files = list(map(lambda x: x.lower(), ignored_files))
     # List all files from the target directory
@@ -56,15 +58,15 @@ def evaluate_method_test_name(file_path, stats, skip_apply_changes=False):
         content = file.read()
 
     # Find method name that is annotated with @Test or @ParameterizedTest
-    target_method_prefix = "@Test\n.*void" \
-                           "|@Test\n\s+@Override\n.*void" \
-                           "|@ParameterizedTest\n.*void" \
-                           "|@ParameterizedTest\n.*\n\s+void" \
-                           "|@ParameterizedTest\n.*\n\s+public\s+void" \
-                           "|@ParameterizedTest\n\s+\@ValueSource\(strings = \{(\n.*){2,4}\s+\}\)\n\s+void" \
-                           "|@ParameterizedTest\n\s+\@CsvSource\((\n\s+value|value|)[\w\s=\{\",\.]+\}\)\n\s+void"
-    target_method_name = "?P<method_name>\w+\("
-    regular_expression = "({})\s+({})".format(target_method_prefix, target_method_name)
+    target_method_prefix = r"@Test\n.*void" \
+                           r"|@Test\n\s+@Override\n.*void" \
+                           r"|@ParameterizedTest\n.*void" \
+                           r"|@ParameterizedTest\n.*\n\s+void" \
+                           r"|@ParameterizedTest\n.*\n\s+public\s+void" \
+                           r"|@ParameterizedTest\n\s+\@ValueSource\(strings = \{(\n.*){2,4}\s+\}\)\n\s+void" \
+                           r"|@ParameterizedTest\n\s+\@CsvSource\((\n\s+value|value|)[\w\s=\{\",\.]+\}\)\n\s+void"
+    target_method_name = r"?P<method_name>\w+\("
+    regular_expression = r"({})\s+({})".format(target_method_prefix, target_method_name)
 
     pattern = re.compile(regular_expression)
 
@@ -149,10 +151,10 @@ def replace_underline(original_name):
 # rename_test_method_recursive(directory='target_directory_path', skip_apply_changes=True)
 
 # Define the ignored file name. like:   ignored_files =  ["ClassANameTest.java", "ClassBNameTest.java"]
-ignored_files = [
+skip_files = [
 ]
 # Apply the change to the files
-rename_test_method_recursive(directory='target_directory_path', ignored_files=ignored_files, skip_apply_changes=True)
+rename_test_method_recursive(directory='target_directory_path', ignored_files=skip_files, skip_apply_changes=True)
 
 # only print the changes
 # rename_test_method_recursive(directory='target_directory_path', skip_apply_changes=True)
