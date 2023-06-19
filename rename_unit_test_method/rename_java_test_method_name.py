@@ -1,3 +1,5 @@
+# Search and replace test files ends with sufix "test.java", "testcase.java"
+# names methods annotated with @Test and @ParameterizedTest
 import os
 import re
 
@@ -29,7 +31,11 @@ def rename_test_method_recursive(directory: str, ignored_files: set = {}, skip_a
                 # evaluate file
                 evaluate_method_test_name(file_path, stats, skip_apply_changes)
 
-    print('Summary, file affected: {}, method renamed: {}, file ignored: {}'
+    if skip_apply_changes :
+        print('\nSummary:\n\ttotal file(s) will be affected: {},\n\ttotal method(s) will be renamed: {},\n\ttotal file(s) ignored: {}'
+          .format(stats.file_updated, stats.method_name_updated, stats.file_ignored))
+    else:
+        print('\nSummary,\n\ttotal file(s) affected: {},\n\ttotal method(s) renamed: {},\n\ttotal file(s) ignored: {}'
           .format(stats.file_updated, stats.method_name_updated, stats.file_ignored))
 
 
@@ -44,20 +50,27 @@ def evaluate_method_test_name(file_path, stats, skip_apply_changes=False):
         content = file.read()
 
     # Find method name that is annotated with @Test or @ParameterizedTest
+    # @ParameterizedTest\n\s+\@ValueSource\(strings = \{(\n.*){2,4}\s+\}\)\n\s+void
+    #
     pattern = re.compile(
-        "(@Test\n.*void" \
-        "|@Test\n\s+@Override\n.*void" \
-        "|@ParameterizedTest\n.*void" \
-        "|@ParameterizedTest\n.*\n\s+void" \
-        "|@ParameterizedTest\n.*\n\s+public\s+void" \
-        ")\s+(\w+\()")
+        "(@Test\n.*void"\
+        "|@Test\n\s+@Override\n.*void"\
+        "|@ParameterizedTest\n.*void"\
+        "|@ParameterizedTest\n.*\n\s+void"\
+        "|@ParameterizedTest\n.*\n\s+public\s+void"\
+        "|@ParameterizedTest\n\s+\@ValueSource\(strings = \{(\n.*){2,4}\s+\}\)\n\s+void"\
+        "|@ParameterizedTest\n\s+\@CsvSource\((\n\s+value|value|)[\w\s=\{\",\.]+\}\)\n\s+void"\
+        ")\s+(?P<method_name>\w+\()")
 
     new_content = content
     should_display_file_name = True
     is_file_affected = False
     for match in re.finditer(pattern, content):
 
-        method_name = match.group(2)
+        method_name = match.group("method_name")
+        if method_name == "" or method_name == None:
+            print('!!!! review regex, file_name: {}'.format(file_path))
+            continue
 
         new_method_name = method_name
         if not method_name.lower().startswith("test"):
@@ -130,6 +143,7 @@ def replace_underline(original_name):
 # only print the changes
 # rename_test_method_recursive(directory='target_directory_path', skip_apply_changes=True)
 
+# Define the ignored file name. like:   ignored_files =  ["ClassANameTest.java", "ClassBNameTest.java"]
 ignored_files = [
 ]
 # Apply the change to the files
