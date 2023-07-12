@@ -36,7 +36,7 @@ METHOD_MATCHERS_ASSERT_THAT = 'assertThat'
 class Stats:
     file_updated = 0
     method_name_updated = 0
-    file_ignored = 0
+    file_ignored = []
     assert_matcher_types = {}
 
 
@@ -58,8 +58,9 @@ def rename_test_method_recursive(directory: str, ignored_files=None, skip_apply_
 
                 if file_name_lowercase in lowercase_ignored_files:
                     # skip ignored file
-                    stats.file_ignored = stats.file_ignored + 1
+                    stats.file_ignored.append(file_name)
                     continue
+
                 # get the file path
                 file_path = os.path.join(root, file_name)
 
@@ -69,17 +70,15 @@ def rename_test_method_recursive(directory: str, ignored_files=None, skip_apply_
     if skip_apply_changes:
         print('\nSummary:'
               '\n\ttotal file(s) will be affected: {},'
-              '\n\ttotal method(s) will be renamed: {},'
               '\n\ttotal matcher(s): {},'
-              '\n\ttotal file(s) ignored: {}'
-              .format(stats.file_updated, stats.method_name_updated, stats.assert_matcher_types, stats.file_ignored))
+              '\n\ttotal file(s) ignored: [{}]'
+              .format(stats.file_updated, stats.assert_matcher_types, ',\n\t\t'.join(stats.file_ignored)))
     else:
         print('\nSummary,'
               '\n\ttotal file(s) affected: {},'
-              '\n\ttotal method(s) renamed: {},'
               '\n\ttotal matcher(s): {},'
-              '\n\ttotal file(s) ignored: {}'
-              .format(stats.file_updated, stats.method_name_updated, stats.assert_matcher_types, stats.file_ignored))
+              '\n\ttotal file(s) ignored: [{}]'
+              .format(stats.file_updated, stats.assert_matcher_types, ',\n\t\t'.join(stats.file_ignored)))
 
 
 def evaluate_file(file_path, stats, skip_apply_changes=False):
@@ -105,8 +104,9 @@ def process_content(content, file_path, skip_apply_changes, stats):
     new_content = content
     is_file_affected = False
     if IMPORT_JUNIT_JUPITER_ASSERT_EQUALS in content:
-        # Skip equals from import static org.junit.Assert.assertEquals
-        stats.file_ignored = stats.file_ignored + 1
+        # Skip equals from import static org.junit.Assert.assertEquals\
+        file_path, filename = os.path.split(file_path)
+        stats.file_ignored.append(filename)
         return is_file_affected, new_content
 
     add_imports = {IMPORT_ASSERT_THAT}
@@ -190,8 +190,8 @@ def append_java_assert_imports(new_content, new_imports):
 
 def remove_assert_imports(new_content, remove_imports):
     for remove_import in remove_imports:
-        import_value = "{}\n"\
-            .format(remove_import)\
+        import_value = "{}\n" \
+            .format(remove_import) \
             .rstrip('\n')
         if import_value in new_content:
             new_content = new_content.replace(import_value, "")
@@ -316,6 +316,6 @@ def remove_prefix(text, prefix):
 
 skip_files = {}
 # Apply the change to the files
-rename_test_method_recursive(directory='<path>',
+rename_test_method_recursive(directory='<project_path>',
                              ignored_files=skip_files,
                              skip_apply_changes=False)
