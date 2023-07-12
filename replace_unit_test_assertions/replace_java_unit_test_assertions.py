@@ -133,11 +133,11 @@ def evaluate_file(file_path, stats, skip_apply_changes=False):
 def process_content(content, file_path, skip_apply_changes, stats):
     new_content = content
     is_file_affected = False
-    if IMPORT_JUNIT_JUPITER_ASSERT_EQUALS in content:
-        # Skip equals from import static org.junit.Assert.assertEquals\
-        file_path, filename = os.path.split(file_path)
-        stats.file_ignored_matchers_equal_to.append(filename)
-        return is_file_affected, new_content
+    # if IMPORT_JUNIT_JUPITER_ASSERT_EQUALS in content:
+    #     # Skip equals from import static org.junit.Assert.assertEquals\
+    #     file_path, filename = os.path.split(file_path)
+    #     stats.file_ignored_matchers_equal_to.append(filename)
+    #     return is_file_affected, new_content
 
     add_imports = {IMPORT_ASSERT_THAT}
     remove_imports = {IMPORT_JUNIT_4_ASSERT_THAT}
