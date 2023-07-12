@@ -37,7 +37,17 @@ class Stats:
     file_updated = 0
     method_name_updated = 0
     file_ignored = []
+    file_ignored_matchers_equal_to = []
     assert_matcher_types = {}
+
+    def total_ignored(self):
+        return self.total_ignored_manually() + self.total_ignored_by_using_hamcrest_equal_to()
+
+    def total_ignored_manually(self):
+        return len(self.file_ignored)
+
+    def total_ignored_by_using_hamcrest_equal_to(self):
+        return len(self.file_ignored_matchers_equal_to)
 
 
 def rename_test_method_recursive(directory: str, ignored_files=None, skip_apply_changes: bool = False):
@@ -68,17 +78,37 @@ def rename_test_method_recursive(directory: str, ignored_files=None, skip_apply_
                 evaluate_file(file_path, stats, skip_apply_changes)
 
     if skip_apply_changes:
-        print('\nSummary:'
-              '\n\ttotal file(s) will be affected: {},'
-              '\n\ttotal matcher(s): {},'
-              '\n\ttotal file(s) ignored: [{}]'
-              .format(stats.file_updated, stats.assert_matcher_types, ',\n\t\t'.join(stats.file_ignored)))
+        print('\n####Summary:'
+              '\n\t- total file(s) will be affected: {},'
+              '\n\t- total matcher(s): {},'
+              '\n\t- total file(s) ignored: {}'
+              '\n\t\t- ignored manually: {},'
+              '\n\t\t- ignored by using `org.hamcrest.Matchers.equalTo`: {},'
+              '\n\t- files ignored manually : [{}],'
+              '\n\t- files ignored by using `org.hamcrest.Matchers.equalTo`: [{}]'
+              .format(stats.file_updated,
+                      stats.assert_matcher_types,
+                      stats.total_ignored(),
+                      stats.total_ignored_manually(),
+                      stats.total_ignored_by_using_hamcrest_equal_to(),
+                      ',\n\t\t- '.join(stats.file_ignored),
+                      ',\n\t\t- '.join(stats.file_ignored_matchers_equal_to)))
     else:
-        print('\nSummary,'
-              '\n\ttotal file(s) affected: {},'
-              '\n\ttotal matcher(s): {},'
-              '\n\ttotal file(s) ignored: [{}]'
-              .format(stats.file_updated, stats.assert_matcher_types, ',\n\t\t'.join(stats.file_ignored)))
+        print('\n####Summary,'
+              '\n\t- total file(s) affected: `{}`,'
+              '\n\t- total matcher(s): `{}`,'
+              '\n\t- total file(s) ignored: `{}`'
+              '\n\t\t- ignored manually: `{}`,'
+              '\n\t\t- ignored by using `org.hamcrest.Matchers.equalTo`: `{}`,'
+              '\n\t- files ignored manually : [{}],'
+              '\n\t- files ignored by using `org.hamcrest.Matchers.equalTo`: [{}]'
+              .format(stats.file_updated,
+                      stats.assert_matcher_types,
+                      stats.total_ignored(),
+                      stats.total_ignored_manually(),
+                      stats.total_ignored_by_using_hamcrest_equal_to(),
+                      ',\n\t\t- '.join(stats.file_ignored),
+                      ',\n\t\t- '.join(stats.file_ignored_matchers_equal_to)))
 
 
 def evaluate_file(file_path, stats, skip_apply_changes=False):
@@ -106,7 +136,7 @@ def process_content(content, file_path, skip_apply_changes, stats):
     if IMPORT_JUNIT_JUPITER_ASSERT_EQUALS in content:
         # Skip equals from import static org.junit.Assert.assertEquals\
         file_path, filename = os.path.split(file_path)
-        stats.file_ignored.append(filename)
+        stats.file_ignored_matchers_equal_to.append(filename)
         return is_file_affected, new_content
 
     add_imports = {IMPORT_ASSERT_THAT}
@@ -184,7 +214,7 @@ def append_java_assert_imports(new_content, new_imports):
     last_import_index = new_content.rfind(JAVA_IMPORT)
     # Find the position to insert the new imports
     next_line_content = new_content.find('\n', last_import_index)
-    new_content = new_content[:next_line_content] + new_imports + new_content[next_line_content:]
+    new_content = new_content[:next_line_content] + '\n' + new_imports + new_content[next_line_content:]
     return new_content
 
 
@@ -314,8 +344,10 @@ def remove_prefix(text, prefix):
     return text
 
 
-skip_files = {}
+skip_files = {
+}
 # Apply the change to the files
-rename_test_method_recursive(directory='<project_path>',
+rename_test_method_recursive(directory='<path>',
                              ignored_files=skip_files,
                              skip_apply_changes=False)
+
