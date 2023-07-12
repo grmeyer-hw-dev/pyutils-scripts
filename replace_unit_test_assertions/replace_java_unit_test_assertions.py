@@ -91,8 +91,8 @@ def rename_test_method_recursive(directory: str, ignored_files=None, skip_apply_
                       stats.total_ignored(),
                       stats.total_ignored_manually(),
                       stats.total_ignored_by_using_hamcrest_equal_to(),
-                      ',\n\t\t- '.join(stats.file_ignored),
-                      ',\n\t\t- '.join(stats.file_ignored_matchers_equal_to)))
+                      '\n\t\t- ' + (',\n\t\t- '.join(stats.file_ignored)) + '\n\t',
+                      '\n\t\t- ' + (',\n\t\t- '.join(stats.file_ignored_matchers_equal_to)) + '\n\t'))
     else:
         print('\n####Summary,'
               '\n\t- total file(s) affected: `{}`,'
@@ -107,8 +107,8 @@ def rename_test_method_recursive(directory: str, ignored_files=None, skip_apply_
                       stats.total_ignored(),
                       stats.total_ignored_manually(),
                       stats.total_ignored_by_using_hamcrest_equal_to(),
-                      ',\n\t\t- '.join(stats.file_ignored),
-                      ',\n\t\t- '.join(stats.file_ignored_matchers_equal_to)))
+                      '\n\t\t- ' + (',\n\t\t- '.join(stats.file_ignored)) + '\n\t',
+                      '\n\t\t- ' + (',\n\t\t- '.join(stats.file_ignored_matchers_equal_to)) + '\n\t'))
 
 
 def evaluate_file(file_path, stats, skip_apply_changes=False):
