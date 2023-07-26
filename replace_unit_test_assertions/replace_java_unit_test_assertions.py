@@ -50,7 +50,7 @@ class Stats:
         return len(self.file_ignored_matchers_equal_to)
 
 
-def rename_test_method_recursive(directory: str, ignored_files=None, skip_apply_changes: bool = False):
+def replace_unit_test_assertions(directory: str, ignored_files=None, skip_apply_changes: bool = False):
     # Set True on skip_apply_changes to skip apply changes to the file, it'll only display the changes
     if ignored_files is None:
         ignored_files = {}
@@ -347,7 +347,7 @@ def remove_prefix(text, prefix):
 skip_files = {
 }
 # Apply the change to the files
-rename_test_method_recursive(directory='<path>',
+replace_unit_test_assertions(directory='<path>',
                              ignored_files=skip_files,
                              skip_apply_changes=False)
 
